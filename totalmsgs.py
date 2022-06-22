@@ -23,6 +23,6 @@ async def _(e):
         user = "me"
     a = await e.client.get_messages(e.chat_id, 0, from_user=user)
     user = await e.client.get_entity(user)
-    await eor(e, f"Total msgs of `{get_display_name(user)}` here = {a.total}")
+    await eor(e, f"Total Msgs `{get_display_name(user)}` Here ~ {a.total}")
 
 
