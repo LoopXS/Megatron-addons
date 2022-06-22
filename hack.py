@@ -24,7 +24,7 @@ async def _(event):
     animation_ttl = range(0, 11)
     xx = await eor(event, "Installing...")
     animation_chars = [
-        "`Installing Files To Hacked Private CɪᴘʜᴇʀX Server...`",
+        "`Installing Files To Hacked Private heartless Server...`",
         "`Target Selected.`",
         "`Installing... 0%\n▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ `",
         "`Installing... 4%\n█▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒ `",
@@ -34,7 +34,7 @@ async def _(event):
         "`Installing... 52%\n█████████████▒▒▒▒▒▒▒▒▒▒▒▒ `",
         "`Installing... 84%\n█████████████████████▒▒▒▒ `",
         "`Installing... 100%\n████████Installed██████████ `",
-        "`Target files Uploading...\n\nDirecting To Remote CɪᴘʜᴇʀX server to hack...`",
+        "`Target files Uploading...\n\nDirecting To Remote heartless server to hack...`",
     ]
     for i in animation_ttl:
         await asyncio.sleep(animation_interval)
@@ -45,20 +45,20 @@ async def _(event):
     await xx.edit("Connecting nd getting combined token from my.telegram.org ")
     await asyncio.sleep(1)
     animation_chars = [
-        "`root@CɪᴘʜᴇʀX:~#` ",
-        "`root@CɪᴘʜᴇʀX:~# ls`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~#`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# `",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@CɪᴘʜᴇʀX:~# trap whoami`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@CɪᴘʜᴇʀX:~# trap whoami\n\nwhoami=user`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@CɪᴘʜᴇʀX:~# trap whoami\n\nwhoami=user\nboost_trap on force ...`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@CɪᴘʜᴇʀX:~# trap whoami\n\nwhoami=user\nboost_trap on force ...\nvictim detected in ghost ...`",
-        "`root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@CɪᴘʜᴇʀX:~# trap whoami\n\nwhoami=user\nboost_trap on force ...\nvictim detected in ghost ...\n\nAll Done!`",
-        "root@CɪᴘʜᴇʀX:~# ls\n\n  usr  ghost  codes  \n\nroot@CɪᴘʜᴇʀX:~# # So Let's Hack it ...\nroot@CɪᴘʜᴇʀX:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@CɪᴘʜᴇʀX:~# trap whoami\n\nwhoami=user\nboost_trap on force ...\nvictim detected  in ghost ...\n\nAll Done!\nInstalling Token!\nToken=`DJ65gulO90P90nlkm65dRfc8I`",
+        "`root@heartless:~#` ",
+        "`root@heartless:~# ls`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~#`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# `",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@heartless:~# trap whoami`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@heartless:~# trap whoami\n\nwhoami=user`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@heartless:~# trap whoami\n\nwhoami=user\nboost_trap on force ...`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@heartless:~# trap whoami\n\nwhoami=user\nboost_trap on force ...\nvictim detected in ghost ...`",
+        "`root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@heartless:~# trap whoami\n\nwhoami=user\nboost_trap on force ...\nvictim detected in ghost ...\n\nAll Done!`",
+        "root@heartless:~# ls\n\n  usr  ghost  codes  \n\nroot@heartless:~# # So Let's Hack it ...\nroot@heartless:~# touch setup.py\n\nsetup.py deployed ...\nAuto CMD deployed ...\n\nroot@heartless:~# trap whoami\n\nwhoami=user\nboost_trap on force ...\nvictim detected  in ghost ...\n\nAll Done!\nInstalling Token!\nToken=`DJ65gulO90P90nlkm65dRfc8I`",
     ]
     for i in animation_ttl:
         await asyncio.sleep(animation_interval)
@@ -126,23 +126,23 @@ async def _(event):
     x = random.randrange(1, 5)
     if x == 1:
         await xx.edit(
-            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only CɪᴘʜᴇʀX can open this🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1EHJSkt64RZEw7a2h8xkRqZSv_4dWhB02/view?usp=sharing"
+            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only heartless can open this🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1EHJSkt64RZEw7a2h8xkRqZSv_4dWhB02/view?usp=sharing"
         )
     if x == 2:
         await xx.edit(
-            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only CɪᴘʜᴇʀX can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1YaUfNVrHU7zSolTuFN3HyHJuTWQtdL2r/view?usp=sharing"
+            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only heartless can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1YaUfNVrHU7zSolTuFN3HyHJuTWQtdL2r/view?usp=sharing"
         )
     if x == 3:
         await xx.edit(
-            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only CɪᴘʜᴇʀX can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1o2wXirqy1RZqnUMgsoM8qX4j4iyse26X/view?usp=sharing"
+            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only heartless can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1o2wXirqy1RZqnUMgsoM8qX4j4iyse26X/view?usp=sharing"
         )
     if x == 4:
         await xx.edit(
-            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only CɪᴘʜᴇʀX can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/15-zZVyEkCFA14mFfD-2DKN-by1YOWf49/view?usp=sharing"
+            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only heartless can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/15-zZVyEkCFA14mFfD-2DKN-by1YOWf49/view?usp=sharing"
         )
     if x == 5:
         await xx.edit(
-            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only CɪᴘʜᴇʀX can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1hPUfr27UtU0XjtC20lXjY9G3D9jR5imj/view?usp=sharing"
+            "`🏴‍☠pdf created. click link below to download data\n\nDon't worry only heartless can open this 🏴‍☠. If you don't Believe try to download` \n\nhttps://drive.google.com/file/d/1hPUfr27UtU0XjtC20lXjY9G3D9jR5imj/view?usp=sharing"
         )
 
 
