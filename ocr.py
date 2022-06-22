@@ -38,6 +38,6 @@ async def ocrify(ult):
         f"https://api.ocr.space/parse/imageurl?apikey={OAPI}{atr}url={li}"
     ).json()
     trt = gr["ParsedResults"][0]["ParsedText"]
-    await msg.edit(f"**🎇 ⲞⲤR Ⲣⲟʀⲧⲁⳑ\n\\Rⲉⲋυⳑⲧⲋ ~ ** `{trt}`")
+    await msg.edit(f"**🎇 ⲞⲤR Ⲣⲟʀⲧⲁⳑ ~ Rⲉⲋυⳑ:\n** `{trt}`")
 
 
