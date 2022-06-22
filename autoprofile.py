@@ -36,7 +36,7 @@ async def autoname_(event):
             return
         DM = time.strftime("%d-%m-%y")
         HM = time.strftime("%H:%M")
-        name = f"🕒{HM} ⚡{OWNER_NAME}⚡ {DM} 🗓️"
+        name = f"𝒉𝒆𝒂𝒓𝒕𝒍𝒆𝒔𝒔 "
         await event.client(UpdateProfileRequest(first_name=name))
         await asyncio.sleep(1111)
 
@@ -61,10 +61,10 @@ async def autoname_(event):
         getn = udB.get("AUTOBIO")
         if not getn:
             return
-        BIOMSG = random.choice(BIOS)
+        BIOMSG = "• 𝒖𝒏 𝒂𝒎𝒂𝒏𝒕 𝒔𝒂𝒏𝒔 𝒄𝒐𝒆𝒖𝒓 | 𝒆𝒏𝒔 𝒑𝒂𝒓𝒊𝒔 🎭"
         DM = time.strftime("%d-%m-%y")
         HM = time.strftime("%H:%M")
-        name = f"📅{DM} | {BIOMSG} | ⌚️{HM}"
+        name = f"{HM} {BIOMSG}"
         await event.client(
             UpdateProfileRequest(
                 about=name,
