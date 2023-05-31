@@ -44,7 +44,7 @@ async def _(event):
         speedtest_image = response
         if as_document is None:
             await xx.edit(
-                """`Ultroid Server Speed in {} sec`
+                """`Server Speed in {} sec`
 
 `Download: {}`
 `Upload: {}`
