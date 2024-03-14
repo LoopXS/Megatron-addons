@@ -9,6 +9,7 @@
 """
 
 import html
+import imghdr
 
 from telethon.tl.functions.account import UpdateProfileRequest
 from telethon.tl.functions.photos import DeletePhotosRequest, UploadProfilePhotoRequest
@@ -20,7 +21,7 @@ from . import *
 
 @ultroid_cmd(pattern="clone ?(.*)", fullsudo=True)
 async def _(event):
-    eve = await event.eor("`Processing...`")
+    eve = await event.eor("Processing...")
     reply_message = await event.get_reply_message()
     whoiam = await event.client(GetFullUserRequest(ultroid_bot.uid))
     if whoiam.full_user.about:
@@ -50,11 +51,12 @@ async def _(event):
     await event.client(UpdateProfileRequest(about=user_bio))
     if profile_pic:
         pfile = await event.client.upload_file(profile_pic)
-        await event.client(UploadProfilePhotoRequest(pfile))
+        await event.client(UploadProfilePhotoRequest(file=pfile))
     await eve.delete()
     await event.client.send_message(
-        event.chat_id, f"**I am `{first_name}` from now...**", reply_to=reply_message
+        event.chat_id, f"I am {first_name} from now...", reply_to=reply_message
     )
+
 
 
 @ultroid_cmd(pattern="revert$")
