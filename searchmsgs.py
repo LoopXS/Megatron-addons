@@ -7,8 +7,8 @@
     »» To search in Reverse order.
 
 ✘ **Examples** :
-   •  `{i}search Ultroid`
-   •  `{i}search -r Heroku : 10`
+   •  `{i}search Heartless`
+   •  `{i}search -r Heartless : 10`
 """
 
 
