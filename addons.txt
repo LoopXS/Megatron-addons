@@ -5,6 +5,7 @@ gtts
 gingerit
 jikanpy
 git+https://github.com/New-dev0/AsyncLyricsExtractor.git
+markdownify
 phlogo
 pokedex.py
 pyfiglet
@@ -16,3 +17,7 @@ speechrecognition
 speedtest-cli
 textblob
 wikipedia
+emoji
+aiocron 
+glitch_this
+pygments
