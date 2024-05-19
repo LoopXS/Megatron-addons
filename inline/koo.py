@@ -95,4 +95,4 @@ async def koo_search(ult):
     await ult.answer(res, switch_pm=switch, switch_pm_param="start")
 
 
-InlinePlugin.update({"Kᴏᴏ Sᴇᴀʀᴄʜ": "koo @__kumar__amit"})
+InlinePlugin.update({"Kᴏᴏ Sᴇᴀʀᴄʜ": "koo @heartless"})
