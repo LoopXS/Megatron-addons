@@ -6,30 +6,36 @@
 """
 
 
-import io
+import json
 import os
 import random
 import textwrap
+import urllib
 
 import emoji
 from fontTools.ttLib import TTFont
 from PIL import Image, ImageDraw, ImageFont, ImageOps
-from telethon.errors.rpcerrorlist import UserNotParticipantError
 from telethon.tl import functions, types
-from telethon.utils import get_display_name
-
+from telethon.errors.rpcerrorlist import UserNotParticipantError
 from . import *
 
 # Oringinal Source from Nicegrill: https://github.com/erenmetesar/NiceGrill/
-# Ported to heartless
+# Ported to Ultroid
 
 
-def is_emoji(char):
-    """`emoji.UNICODE_EMOJI` was removed in emoji 2.0 (`EMOJI_DATA` replaced it)."""
-    data = getattr(emoji, "EMOJI_DATA", None)
-    if data is None:
-        data = getattr(emoji, "UNICODE_EMOJI", {})
-    return char in data
+def _is_emoji_char(letter: str) -> bool:
+    """Compatible with old and new python-emoji releases."""
+    try:
+        is_emoji = getattr(emoji, "is_emoji", None)
+        if callable(is_emoji):
+            return bool(is_emoji(letter))
+    except Exception:
+        pass
+    for attr in ("UNICODE_EMOJI", "EMOJI_UNICODE", "EMOJI_UNICODE_ENGLISH"):
+        data = getattr(emoji, attr, None)
+        if isinstance(data, dict) and letter in data:
+            return True
+    return False
 
 
 COLORS = [
@@ -69,18 +75,18 @@ async def process(msg, user, client, reply, replied=None):
         if length > 43:
             text += textwrap.wrap(line, 43)
             maxlength = 43
-            if width < int(fallback.getlength(line[:43])):
+            if width < fallback.getsize(line[:43])[0]:
                 if "MessageEntityCode" in str(reply.entities):
-                    width = int(mono.getlength(line[:43])) + 30
+                    width = mono.getsize(line[:43])[0] + 30
                 else:
-                    width = int(fallback.getlength(line[:43]))
+                    width = fallback.getsize(line[:43])[0]
         else:
             text.append(line + "\n")
-            if width < int(fallback.getlength(line)):
+            if width < fallback.getsize(line)[0]:
                 if "MessageEntityCode" in str(reply.entities):
-                    width = int(mono.getlength(line)) + 30
+                    width = mono.getsize(line)[0] + 30
                 else:
-                    width = int(fallback.getlength(line))
+                    width = fallback.getsize(line)[0]
             if maxlength < length:
                 maxlength = length
 
@@ -97,12 +103,13 @@ async def process(msg, user, client, reply, replied=None):
         pass
     except Exception as er:
         LOGS.exception(er)
-    titlewidth = int(font2.getlength(title))
+    titlewidth = font2.getsize(title)[0]
 
     # Get user name
-    tot = get_display_name(user) or "Deleted Account"
+    lname = "" if not user.last_name else user.last_name
+    tot = user.first_name + " " + lname
 
-    namewidth = int(fallback.getlength(tot)) + 10
+    namewidth = fallback.getsize(tot)[0] + 10
 
     if namewidth > width:
         width = namewidth
@@ -147,7 +154,9 @@ async def process(msg, user, client, reply, replied=None):
     y = 80
     if replied:
         # Creating a big canvas to gather all the elements
-        reptot = get_display_name(await replied.get_sender()) or "Deleted Account"
+        replname = "" if not replied.sender.last_name else replied.sender.last_name
+        fname = "" if not replied.sender.first_name else replied.sender.first_name
+        reptot = fname + " " + replname
         if reply.sticker:
             sticker = await reply.download_media()
             stimg = Image.open(sticker)
@@ -196,10 +205,9 @@ async def process(msg, user, client, reply, replied=None):
         canvas.paste(stimg, (pfpbg.width + 10, 10))
         os.remove(sticker)
         return True, canvas
-    elif reply.document and not reply.audio and not reply.voice:
-        fname_ = reply.file.name or "file"
-        docname = ".".join(fname_.split(".")[:-1]) or fname_
-        doctype = fname_.split(".")[-1].upper() if "." in fname_ else ""
+    elif reply.document and not reply.audio and not reply.audio:
+        docname = ".".join(reply.document.attributes[-1].file_name.split(".")[:-1])
+        doctype = reply.document.attributes[-1].file_name.split(".")[-1].upper()
         if reply.document.size < 1024:
             docsize = str(reply.document.size) + " Bytes"
         elif reply.document.size < 1048576:
@@ -209,9 +217,9 @@ async def process(msg, user, client, reply, replied=None):
         else:
             docsize = str(round(reply.document.size / 1024**3, 2)) + " GB "
         docbglen = (
-            int(font.getlength(docsize))
-            if int(font.getlength(docsize)) > int(font.getlength(docname))
-            else int(font.getlength(docname))
+            font.getsize(docsize)[0]
+            if font.getsize(docsize)[0] > font.getsize(docname)[0]
+            else font.getsize(docname)[0]
         )
         canvas = canvas.resize((pfpbg.width + width + docbglen, 160 + height))
         top, middle, bottom = await drawer(width + docbglen, height + 30)
@@ -234,17 +242,17 @@ async def process(msg, user, client, reply, replied=None):
         "resources/fonts/0.otf", 43, encoding="utf-16"
     )
     for letter in tot:
-        if is_emoji(letter):
-            newemoji, mask = await emoji_fetch_safe(letter)
+        if _is_emoji_char(letter):
+            newemoji, mask = await emoji_fetch(letter)
             canvas.paste(newemoji, (space, 24), mask)
             space += 40
         else:
             if not await fontTest(letter):
                 draw.text((space, 20), letter, font=namefallback, fill=color)
-                space += int(namefallback.getlength(letter))
+                space += namefallback.getsize(letter)[0]
             else:
                 draw.text((space, 20), letter, font=font, fill=color)
-                space += int(font.getlength(letter))
+                space += font.getsize(letter)[0]
 
     if title:
         draw.text(
@@ -289,18 +297,18 @@ async def process(msg, user, client, reply, replied=None):
                         "resources/fonts/18.ttf", 30, encoding="utf-16"
                     )
                     textcolor = "#898989"
-            if is_emoji(letter):
-                newemoji, mask = await emoji_fetch_safe(letter)
+            if _is_emoji_char(letter):
+                newemoji, mask = await emoji_fetch(letter)
                 canvas.paste(newemoji, (x, y - 2), mask)
                 x += 45
                 emojicount += 1
             else:
                 if not await fontTest(letter):
                     draw.text((x, y), letter, font=textfallback, fill=textcolor)
-                    x += int(textfallback.getlength(letter))
+                    x += textfallback.getsize(letter)[0]
                 else:
                     draw.text((x, y), letter, font=font2, fill=textcolor)
-                    x += int(font2.getlength(letter))
+                    x += font2.getsize(letter)[0]
             msg = msg.replace(letter, "¶", 1)
         y += 40
         x = pfpbg.width + 30
@@ -324,16 +332,11 @@ async def drawer(width, height):
     return top, middle, bottom
 
 
-_CMAP = None
-
-
 async def fontTest(letter):
-    global _CMAP
-    if _CMAP is None:
-        _CMAP = set()
-        for table in TTFont("resources/fonts/18.ttf")["cmap"].tables:
-            _CMAP.update(table.cmap.keys())
-    return ord(letter) in _CMAP
+    test = TTFont("resources/fonts/18.ttf")
+    for table in test["cmap"].tables:
+        if ord(letter) in table.cmap.keys():
+            return True
 
 
 async def get_entity(msg):
@@ -385,41 +388,25 @@ async def no_photo(reply, tot):
     return pfp, color
 
 
-_EMOJIS = None
-_EMOJI_IMG = {}
-
-
-async def emoji_fetch(char):
-    """Fetch (and cache) the emoji image; falls back to the "no entry" emoji."""
-    global _EMOJIS
-    if _EMOJIS is None:
-        _EMOJIS = await async_searcher(
-            "https://github.com/erenmetesar/modules-repo/raw/master/emojis.txt",
-            re_json=True,
+async def emoji_fetch(emoji):
+    emojis = json.loads(
+        urllib.request.urlopen(
+            "https://github.com/erenmetesar/modules-repo/raw/master/emojis.txt"
         )
-    key = char if char in _EMOJIS else "⛔"
-    if key not in _EMOJIS:
-        raise LookupError("emoji index unavailable")
-    if key not in _EMOJI_IMG:
-        _EMOJI_IMG[key] = await async_searcher(_EMOJIS[key], re_content=True)
-    return await transparent(io.BytesIO(_EMOJI_IMG[key]))
+        .read()
+        .decode()
+    )
+    if emoji in emojis:
+        img = emojis[emoji]
+        return await transparent(
+            urllib.request.urlretrieve(img, "resources/emoji.png")[0]
+        )
+    img = emojis["⛔"]
+    return await transparent(urllib.request.urlretrieve(img, "resources/emoji.png")[0])
 
 
-async def emoji_fetch_safe(char):
-    """Like emoji_fetch but never fails: network trouble -> blank placeholder."""
-    global _EMOJIS
-    try:
-        return await emoji_fetch(char)
-    except Exception as er:
-        LOGS.warning(f"emoji image unavailable ({er}); drawing a blank placeholder")
-        if _EMOJIS is None:
-            _EMOJIS = {}  # do not retry the index on every single emoji
-        blank = Image.new("RGBA", (40, 40), (0, 0, 0, 0))
-        return blank, Image.new("L", (40, 40), 0)
-
-
-async def transparent(source):
-    emoji = Image.open(source).convert("RGBA")
+async def transparent(emoji):
+    emoji = Image.open(emoji).convert("RGBA")
     emoji.thumbnail((40, 40))
 
     # Mask
@@ -441,44 +428,42 @@ async def replied_user(draw, tot, text, maxlength, title):
     for letter in tot:
         if not await fontTest(letter):
             draw.text((180 + space, 86), letter, font=namefallback, fill="#888888")
-            space += int(namefallback.getlength(letter))
+            space += namefallback.getsize(letter)[0]
         else:
             draw.text((180 + space, 86), letter, font=namefont, fill="#888888")
-            space += int(namefont.getlength(letter))
+            space += namefont.getsize(letter)[0]
     space = 0
     for letter in text:
         if not await fontTest(letter):
             draw.text((180 + space, 132), letter, font=textfallback, fill="#888888")
-            space += int(textfallback.getlength(letter))
+            space += textfallback.getsize(letter)[0]
         else:
             draw.text((180 + space, 132), letter, font=textfont, fill="white")
-            space += int(textfont.getlength(letter))
+            space += textfont.getsize(letter)[0]
 
 
-@heartless_cmd(pattern="qbot$")
+@cipherx_cmd(pattern="qbot$")
 async def _(event):
     reply = await event.get_reply_message()
     if not reply:
-        return await eod(event, "`Reply to a message to quote it.`")
-    if not (reply.message or reply.sticker or reply.document):
-        return await eod(event, "`Reply to a text message, sticker or file.`")
+        return await event.eor("`Reply to a message to make a quote.`")
     msg = reply.message or ""
     repliedreply = await reply.get_reply_message()
     user = await reply.get_sender()
-    out = f"downloads/qbot_{event.id}.webp"
-    os.makedirs("downloads", exist_ok=True)
+    res, canvas = await process(msg, user, event.client, reply, repliedreply)
+    if not res or canvas is None:
+        return
+    canvas.thumbnail((512, 512))
+    outfile = f"qbot_{event.chat_id}_{event.id}.webp"
+    canvas.save(outfile, "WEBP")
+    await event.client.send_file(
+        event.chat_id, outfile, reply_to=event.reply_to_msg_id, force_document=False
+    )
     try:
-        res, canvas = await process(msg, user, event.client, reply, repliedreply)
-        if not res:
-            return
-        canvas.save(out)
-        await event.client.send_file(
-            event.chat_id, out, reply_to=event.reply_to_msg_id
-        )
+        os.remove(outfile)
+    except OSError:
+        pass
+    try:
         await event.delete()
-    except OSError as er:  # missing font / unreadable image
-        LOGS.warning(f"qbot failed: {er}")
-        await eod(event, f"`Could not build the quote: {er}`")
-    finally:
-        if os.path.exists(out):
-            os.remove(out)
+    except Exception:
+        pass
