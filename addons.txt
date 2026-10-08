@@ -1,0 +1,14 @@
+beautifulsoup4
+emoji
+fonttools
+gtts
+lyrics-extractor
+markdownify
+phlogo
+pillow
+pygments
+pyjokes
+speechrecognition
+speedtest-cli
+textblob
+wikipedia
