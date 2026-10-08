@@ -25,7 +25,7 @@ def _clean_lyrics(text: str) -> str:
     return text
 
 
-@cipherx_cmd(pattern=r"lyrics ?(.*)")
+@heartless_cmd(pattern=r"lyrics ?(.*)")
 async def lyrics(event):
     query = (event.pattern_match.group(1) or "").strip()
     if not query:
