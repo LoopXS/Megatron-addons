@@ -206,7 +206,7 @@ def _ocr_space_file(file_path: str, api_key: str, language: str = "") -> str:
     return parsed[0].get("ParsedText", "")
 
 
-@cipherx_cmd(pattern="ocr ?(.*)")
+@heartless_cmd(pattern="ocr ?(.*)")
 async def ocrify(ult):
     if not ult.is_reply:
         return await ult.eor("`Reply to a Photo or PDF...`")
