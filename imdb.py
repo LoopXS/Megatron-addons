@@ -2,30 +2,23 @@
 Search movie details from IMDB
 
 ✘ Commands Available
-• `{i}imdb <title>`
-    Movie/series details. Add a year with `y=`: `{i}imdb Inception y= 2010`.
-    Works inline too: `@<assistant> imdb <title>`.
-    Uses the OMDB key (`{i}setdb OMDB <key>`); without a key it falls back to @imdb.
+• `{i}imdb <keyword>`
 """
 
 from . import *
 
 
-@heartless_cmd(pattern=r"imdb(?:\s+([\s\S]*))?$")
+@heartless_cmd(pattern="imdb ?(.*)")
 async def imdb(e):
-    movie_name = await arg_or_reply(e)
+    m = await e.eor("`...`")
+    movie_name = e.pattern_match.group(1)
     if not movie_name:
-        return await eod(e, "`Provide a movie name too`")
-    m = await e.eor(get_string("com_2").replace("{p}", "").strip())
-    # Prefer our own inline plugin (inline/imdb.py); fall back to @imdb when
-    # no OMDB key has been configured.
-    bot_name = asst.me.username if udB.get_key("OMDB") else "imdb"
+        return await eor(m, "`Provide a movie name too`")
     try:
-        results = await e.client.inline_query(bot_name, f"imdb {movie_name}" if bot_name != "imdb" else movie_name)
-        if not results:
-            return await m.edit("`No Results Found...`")
-        await results[0].click(e.chat_id, reply_to=e.reply_to_msg_id)
+        results = await e.client.inline_query(asst.me.username, f"imdb {movie_name}")
+        await results[0].click(e.chat_id)
         await m.delete()
+    except IndexError:
+        return await eor(m, "No Results Found...")
     except Exception as er:
-        LOGS.exception(er)
-        await m.edit(f"`{er}`")
+        return await eor(m, str(er))
