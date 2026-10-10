@@ -1,121 +1,132 @@
-import re
-from html import escape
-
 from telethon.tl.custom import Button
 from telethon.tl.types import InputWebDocument
+import html
 
-from . import InlinePlugin, LOGS, async_searcher, in_pattern
+from . import in_pattern, InlinePlugin, async_searcher
 
-_USER_RE = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$")
+
+def _clean(value):
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _escape(value):
+    """Escape HTML special characters."""
+    return html.escape(str(value))
 
 
 @in_pattern("gh", owner=True)
 async def gh_feeds(ult):
-    parts = ult.text.split(maxsplit=1)
-    if len(parts) < 2:
-        return await ult.answer(
+    try:
+        username = (ult.text or "").split(maxsplit=1)[1].strip()
+    except IndexError:
+        await ult.answer(
             [],
-            switch_pm="Enter Github Username to see feeds...",
+            switch_pm="Enter Github Username to see profile...",
             switch_pm_param="start",
         )
-    username = parts[1].strip()
-    if not username.endswith("."):
-        return await ult.answer(
-            [], switch_pm="End your query with . to search...", switch_pm_param="start"
+        return
+
+    username = username.rstrip(".")
+    if not username or "/" in username:
+        await ult.answer(
+            [],
+            switch_pm="Enter a valid Github Username",
+            switch_pm_param="start",
         )
-    username = username[:-1]
-    if not _USER_RE.match(username):
-        return await ult.answer(
-            [], switch_pm="Invalid GitHub username", switch_pm_param="start"
-        )
-    try:
-        data = await async_searcher(
-            f"https://api.github.com/users/{username}/events", re_json=True
-        )
-    except Exception as er:
-        LOGS.warning(f"GitHub feeds request failed: {er}")
-        return await ult.answer(
-            [], switch_pm="GitHub is unreachable, try later", switch_pm_param="start"
-        )
-    if not isinstance(data, list):
-        # GitHub error object, e.g. {"message": "Not Found", ...} or rate limit
-        data = data if isinstance(data, dict) else {}
-        msg = "".join(f"{k}: `{v}`\n" for k, v in data.items())
+        return
+
+    data = await async_searcher(
+        f"https://api.github.com/users/{username}",
+        re_json=True,
+    )
+    if not isinstance(data, dict) or data.get("message"):
+        message = _clean(data.get("message") if isinstance(data, dict) else data)
         return await ult.answer(
             [
                 await ult.builder.article(
-                    title=str(data.get("message", "Error"))[:60],
-                    text=msg or "Unexpected response from GitHub",
+                    title="GitHub Error",
+                    description=message or "User not found",
+                    text=f"<b>GitHub Error</b>\n<code>{_escape(message or 'User not found')}</code>",
                     link_preview=False,
+                    buttons=[
+                        Button.switch_inline(
+                            "Search again",
+                            query="gh ",
+                            same_peer=True,
+                        )
+                    ],
                 )
             ],
             cache_time=300,
-            switch_pm="Error!!!",
+            switch_pm="GitHub Error",
             switch_pm_param="start",
         )
-    res = []
-    res_ids = set()
-    uname = escape(username)
-    for cont in data[:50]:
-        etype = cont.get("type")
-        payload = cont.get("payload") or {}
-        text = f"<b><a href='https://github.com/{uname}'>@{uname}</a></b>"
-        title = f"@{username}"
-        extra = None
-        if etype == "PushEvent":
-            text += " pushed in"
-            title += " pushed in"
-            commits = payload.get("commits") or []
-            repo_name = cont["repo"]["name"]
-            url = f"https://github.com/{repo_name}"
-            if commits:
-                url = "https://github.com/" + commits[-1]["url"].split("/repos/")[-1]
-                extra = f"\n-> <b>message:</b> <code>{escape(commits[-1]['message'])}</code>"
-        elif etype == "IssueCommentEvent":
-            title += " commented at"
-            text += " commented at"
-            url = payload["comment"]["html_url"]
-        elif etype == "CreateEvent":
-            title += " created"
-            text += " created"
-            url = "https://github.com/" + cont["repo"]["name"]
-        elif etype == "PullRequestEvent":
-            pr = payload.get("pull_request") or {}
-            if (pr.get("user") or {}).get("login", "").lower() != username.lower():
-                continue
-            url = pr["html_url"]
-            text += " created a pull request in"
-            title += " created a pull request in"
-        elif etype == "ForkEvent":
-            text += " forked"
-            title += " forked"
-            url = payload["forkee"]["html_url"]
-        else:
-            continue
-        repo = cont["repo"]["name"]
-        repo_url = f"https://github.com/{repo}"
-        title += f" {repo}"
-        text += f" <b><a href='{escape(repo_url)}'>{escape(repo)}</a></b>"
-        if extra:
-            text += extra
-        thumb = InputWebDocument(cont["actor"]["avatar_url"], 0, "image/jpeg", [])
-        article = await ult.builder.article(
-            title=title,
-            text=text,
-            url=repo_url,
-            parse_mode="html",
-            link_preview=False,
-            thumb=thumb,
-            buttons=[
-                Button.url("View", url),
-                Button.switch_inline("Search again", query=ult.text, same_peer=True),
-            ],
-        )
-        if article.id not in res_ids:
-            res_ids.add(article.id)
-            res.append(article)
-    msg = f"Showing {len(res)} feeds!" if res else "Nothing Found"
-    await ult.answer(res, cache_time=300, switch_pm=msg, switch_pm_param="start")
+
+    login = _clean(data.get("login")) or username
+    name = _clean(data.get("name")) or login
+    bio = _clean(data.get("bio"))
+    company = _clean(data.get("company"))
+    location = _clean(data.get("location"))
+    blog = _clean(data.get("blog"))
+    twitter = _clean(data.get("twitter_username"))
+    profile_url = _clean(data.get("html_url")) or f"https://github.com/{login}"
+    avatar_url = _clean(data.get("avatar_url")) or (
+        "https://github.com/images/error/octocat_happy.gif"
+    )
+    public_repos = data.get("public_repos", 0)
+    followers = data.get("followers", 0)
+    following = data.get("following", 0)
+    created_at = _clean(data.get("created_at"))[:10]
+
+    text = (
+        f"<b><a href=\"{_escape(profile_url)}\">{_escape(name)}</a></b>\n"
+        f"<b>Username:</b> <code>@{_escape(login)}</code>\n"
+    )
+    if bio:
+        text += f"<b>Bio:</b> {_escape(bio)}\n"
+    if company:
+        text += f"<b>Company:</b> <code>{_escape(company)}</code>\n"
+    if location:
+        text += f"<b>Location:</b> <code>{_escape(location)}</code>\n"
+    if blog:
+        blog_url = blog if blog.startswith("http") else f"https://{blog}"
+        text += f"<b>Blog:</b> <a href=\"{_escape(blog_url)}\">{_escape(blog)}</a>\n"
+    if twitter:
+        text += f"<b>Twitter:</b> <code>@{_escape(twitter)}</code>\n"
+    text += (
+        f"<b>Public repos:</b> <code>{public_repos}</code>\n"
+        f"<b>Followers:</b> <code>{followers}</code>\n"
+        f"<b>Following:</b> <code>{following}</code>\n"
+        f"<b>Joined:</b> <code>{_escape(created_at)}</code>"
+    )
+
+    buttons = [
+        [Button.url("Vɪᴇᴡ Pʀᴏғɪʟᴇ", url=profile_url)],
+        [Button.switch_inline("Sᴇᴀʀᴄʜ Aɢᴀɪɴ", query="gh ", same_peer=True)],
+    ]
+    if blog:
+        blog_url = blog if blog.startswith("http") else f"https://{blog}"
+        buttons.insert(1, [Button.url("Bʟᴏɢ", url=blog_url)])
+
+    await ult.answer(
+        [
+            await ult.builder.article(
+                title=name,
+                description=f"@{login} • {followers} followers",
+                text=text,
+                url=profile_url,
+                parse_mode="html",
+                link_preview=True,
+                thumb=InputWebDocument(avatar_url, 0, "image/jpeg", []),
+                buttons=buttons,
+            )
+        ],
+        cache_time=300,
+        switch_pm=f"GitHub: {login}",
+        switch_pm_param="start",
+    )
 
 
-InlinePlugin.update({"GɪᴛHᴜʙ ғᴇᴇᴅs": "gh"})
+InlinePlugin.update({"GɪᴛHᴜʙ": "gh "})
