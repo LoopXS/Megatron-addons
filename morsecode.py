@@ -1,39 +1,33 @@
 """
 ✘ Commands Available -
 
-• `{i}mencode <text>` (or reply)
+• `{i}mencode <text>`
    Encode the given text to Morse Code.
 
-• `{i}mdecode <text>` (or reply)
+• `{i}mdecode <text>`
    Decode the given text from Morse Code.
 """
 
-from . import arg_or_reply, async_searcher, LOGS, proc_text, heartless_cmd, url_quote
-
-API = "https://apis.xditya.me/morse/{}?text={}"
+from . import async_searcher, heartless_cmd, get_string
 
 
-async def _morse(event, mode, title, label):
-    text = await arg_or_reply(event)
-    if not text:
-        return await event.eor("Please give a text!", time=5)
-    msg = await event.eor(proc_text())
-    try:
-        result = await async_searcher(API.format(mode, url_quote(text)))
-    except Exception as er:
-        LOGS.warning(f"Morse API failed: {er}")
-        return await msg.edit("`Morse API is unreachable, try again later.`")
-    result = (result or "").strip()
-    if not result:
-        return await msg.edit("`The Morse API returned an empty answer.`")
-    await msg.edit(f"**{title}.**\n\n**{label}:** `{result[:3500]}`")
-
-
-@heartless_cmd(pattern=r"mencode(?:\s+([\s\S]*))?$")
+@heartless_cmd(pattern="mencode ?(.*)")
 async def mencode(event):
-    await _morse(event, "encode", "Encoded", "Morse Code")
+    msg = await event.eor(get_string("com_1"))
+    text = event.pattern_match.group(1)
+    if not text:
+        return msg.edit("Please give a text!")
+    base_url = "https://apis.xditya.me/morse/encode?text=" + text
+    encoded = await async_searcher(base_url, re_content=False)
+    await msg.edit("**Encoded.**\n\n**Morse Code:** `{}`".format(encoded))
 
 
-@heartless_cmd(pattern=r"mdecode(?:\s+([\s\S]*))?$")
-async def mdecode(event):
-    await _morse(event, "decode", "Decoded", "Message")
+@heartless_cmd(pattern="mdecode ?(.*)")
+async def mencode(event):
+    msg = await event.eor(get_string("com_1"))
+    text = event.pattern_match.group(1)
+    if not text:
+        return await msg.edit("Please give a text!")
+    base_url = "https://apis.xditya.me/morse/decode?text=" + text
+    encoded = await async_searcher(base_url, re_content=False)
+    await msg.edit("**Decoded.**\n\n**Message:** `{}`".format(encoded))
