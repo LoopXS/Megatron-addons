@@ -1,103 +1,89 @@
 """
-✘ Commands Available
+✘ Commands Available -
 • `{i}spam <no of msgs> <your msg>`
-  `{i}spam <no of msgs>` (reply to a message)
-    Spams chat, count 1 to 99.
+  `{i}spam <no of msgs> <reply message>`
+    spams chat, the current limit for this is from 1 to 99.
 
 • `{i}bigspam <no of msgs> <your msg>`
-  `{i}bigspam <no of msgs>` (reply to a message)
-    Spams chat, count above 99 (max 2000). Full sudo only.
+  `{i}bigspam <no of msgs> <reply message>`
+    Spams chat, the current limit is above 100.
+
+• `{i}delayspam <delay time> <count> <msg>`
+    Spam chat with delays..
 
 • `{i}tspam <text>`
-    Spam chat with the text one character at a time.
-
-For delayed spam use the official `{i}delayspam` command.
+    Spam Chat with One-One Character..
 """
 
 import asyncio
 
-from telethon.errors import FloodWaitError
-
 from . import *
 
-MAX_SPAM = 99
-MAX_BIGSPAM = 2000
 
-
-async def _send_many(event, message, count, delay=0.3):
-    """Send ``message`` ``count`` times sequentially, obeying FloodWait.
-
-    Messages are sent one after another (not as a burst of concurrent
-    requests) and a FloodWait pauses the loop instead of aborting it or
-    disconnecting the client.
-    """
-    for _ in range(count):
-        while True:
-            try:
-                await event.respond(message)
-                break
-            except FloodWaitError as fw:
-                await asyncio.sleep(min(fw.seconds, 300) + 1)
-        await asyncio.sleep(delay)
-
-
-async def _parse_spam(event, cmd):
-    """Return ``(count, message)`` or ``None`` after replying with usage."""
-    count_s, text = event.pattern_match.group(1), event.pattern_match.group(2)
-    if not count_s:
-        await eod(event, f"`Usage: {HNDLR}{cmd} <count> <text | reply>`")
-        return None
-    if event.is_reply and not text:
-        message = await event.get_reply_message()
-    elif text:
-        message = text
-    else:
-        await eod(event, "`Reply to a Message or Give some Text..`")
-        return None
-    return int(count_s), message
-
-
-@heartless_cmd(pattern=r"tspam(?:\s+([\s\S]*))?$")
+@heartless_cmd(pattern="tspam")
 async def tmeme(e):
-    message = (e.pattern_match.group(1) or "").replace(" ", "")
-    if not message:
-        return await eod(e, "`Give some text..`")
+    tspam = str(e.text[7:])
+    message = tspam.replace(" ", "")
+    for letter in message:
+        await e.respond(letter)
     await e.delete()
-    await _send_many_chars(e, message)
 
 
-async def _send_many_chars(event, chars):
-    for letter in chars:
-        while True:
-            try:
-                await event.respond(letter)
-                break
-            except FloodWaitError as fw:
-                await asyncio.sleep(min(fw.seconds, 300) + 1)
-        await asyncio.sleep(0.3)
-
-
-@heartless_cmd(pattern=r"spam(?:\s+(\d+))?(?:\s+([\s\S]+))?$")
+@heartless_cmd(pattern="spam")
 async def spammer(e):
-    parsed = await _parse_spam(e, "spam")
-    if not parsed:
-        return
-    counter, message = parsed
-    if counter < 1:
-        return await eod(e, "`Count must be at least 1`")
-    if counter > MAX_SPAM:
-        return await eod(e, "`Use bigspam cmd`")
+    message = e.text
+    if e.reply_to:
+        if not len(message.split()) >= 2:
+            return await eod(e, "`Use in Proper Format`")
+        spam_message = await e.get_reply_message()
+    else:
+        if not len(message.split()) >= 3:
+            return await eod(e, "`Reply to a Message or Give some Text..`")
+        spam_message = message.split(maxsplit=2)[2]
+    counter = message.split()[1]
+    try:
+        counter = int(counter)
+        if counter >= 100:
+            return await eod(e, "`Use bigspam cmd`")
+    except BaseException:
+        return await eod(e, "`Use in Proper Format`")
+    await asyncio.wait([e.respond(spam_message) for i in range(counter)])
     await e.delete()
-    await _send_many(e, message, counter)
 
 
-@heartless_cmd(pattern=r"bigspam(?:\s+(\d+))?(?:\s+([\s\S]+))?$", fullsudo=True)
+@heartless_cmd(pattern="bigspam", fullsudo=True)
 async def bigspam(e):
-    parsed = await _parse_spam(e, "bigspam")
-    if not parsed:
-        return
-    counter, message = parsed
-    if not 1 <= counter <= MAX_BIGSPAM:
-        return await eod(e, f"`Count must be between 1 and {MAX_BIGSPAM}`")
+    message = e.text
+    if e.reply_to:
+        if not len(message.split()) >= 2:
+            return await eod(e, "`Use in Proper Format`")
+        spam_message = await e.get_reply_message()
+    else:
+        if not len(message.split()) >= 3:
+            return await eod(e, "`Reply to a Message or Give some Text..`")
+        spam_message = message.split(maxsplit=2)[2]
+    counter = message.split()[1]
+    try:
+        counter = int(counter)
+    except BaseException:
+        return await eod(e, "`Use in Proper Format`")
+    await asyncio.wait([e.respond(spam_message) for i in range(counter)])
     await e.delete()
-    await _send_many(e, message, counter)
+
+
+@heartless_cmd(pattern="delayspam ?(.*)")
+async def delayspammer(e):
+    try:
+        args = e.text.split(" ", 3)
+        delay = float(args[1])
+        count = int(args[2])
+        msg = str(args[3])
+    except BaseException:
+        return await e.edit(f"**Usage :** {HNDLR}delayspam <delay time> <count> <msg>")
+    await e.delete()
+    try:
+        for i in range(count):
+            await e.respond(msg)
+            await asyncio.sleep(delay)
+    except Exception as u:
+        await e.respond(f"**Error :** `{u}`")
