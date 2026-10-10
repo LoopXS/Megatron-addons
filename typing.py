@@ -2,35 +2,29 @@
 ✘ Commands Available -
 
 • `{i}type <msg>`
-    Edits the Message and shows like someone is typing (max 150 characters).
+    Edits the Message and shows like someone is typing.
 """
 
 import asyncio
 
-from telethon.errors import FloodWaitError, MessageNotModifiedError
-
 from . import *
 
-MAX_CHARS = 150
 
-
-@heartless_cmd(pattern=r"type(?:\s+([\s\S]*))?$", fullsudo=True)
+@heartless_cmd(pattern="type ?(.*)", fullsudo=True)
 async def _(event):
-    input_str = await arg_or_reply(event)
+    input_str = event.pattern_match.group(1)
     if not input_str:
-        return await eod(event, "Give me something to type !")
-    input_str = input_str[:MAX_CHARS]
+        return await event.eor("Give me something to type !")
+    shiiinabot = "\u2060" * 602
+    okla = await event.eor(shiiinabot)
     typing_symbol = "|"
     previous_text = ""
-    okla = await event.eor("\u2060" * 602)
+    await okla.edit(typing_symbol)
+    await asyncio.sleep(0.05)
     for character in input_str:
-        previous_text += character
-        try:
-            await okla.edit(previous_text + typing_symbol)
-            await asyncio.sleep(0.1)
-            await okla.edit(previous_text)
-            await asyncio.sleep(0.1)
-        except MessageNotModifiedError:
-            pass
-        except FloodWaitError as fw:
-            await asyncio.sleep(min(fw.seconds, 120) + 1)
+        previous_text = previous_text + "" + character
+        typing_text = previous_text + "" + typing_symbol
+        await okla.edit(typing_text)
+        await asyncio.sleep(0.05)
+        await okla.edit(previous_text)
+        await asyncio.sleep(0.05)
