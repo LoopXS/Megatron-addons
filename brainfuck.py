@@ -1,84 +1,160 @@
-# Made by : @DarkPentester
-# Made For : https://github.com/LoopXS/Megatron-addons
-
 """
 ✘ Commands Available
 
-• `{i}bf <text>` (or reply)
-    Text to Brainfuck string generator (characters 0-255 only).
+• `{i}bf`
+    Text to Brainfuck String Generator with text or reply.
 
-• `{i}rbf <code>` (or reply)
-    Brainfuck interpreter. Execution is limited in steps and output size.
+• `{i}rbf`
+    Brainfuck Interpreter with string or reply.
 """
-
-import asyncio
 
 from . import *
 
-MAX_STEPS = 2_000_000
-MAX_OUTPUT = 4000
+
+def evaluate(commands):
+    interpreter = BrainfuckInterpreter(commands)
+    while interpreter.available():
+        interpreter.step()
+
+    return interpreter.output.read()
 
 
-class BrainfuckError(Exception):
-    pass
+__all__ = "BrainfuckInterpreter"
 
 
-def _match_brackets(code):
-    """Return {open_index: close_index, close_index: open_index}."""
-    pairs, stack = {}, []
-    for i, ch in enumerate(code):
-        if ch == "[":
-            stack.append(i)
-        elif ch == "]":
-            if not stack:
-                raise BrainfuckError(f"Unmatched `]` at position {i}")
-            j = stack.pop()
-            pairs[i], pairs[j] = j, i
-    if stack:
-        raise BrainfuckError(f"Unmatched `[` at position {stack[-1]}")
-    return pairs
+class IOStream:
+    def __init__(self, data=None):
+        self._buffer = data or ""
+
+    def __len__(self):
+        return len(self._buffer)
+
+    def read(self, length=None):
+        if not length:
+            data = self._buffer
+            self._buffer = ""
+        else:
+            data = self._buffer[:length]
+            self._buffer = self._buffer[length:]
+
+        return data
+
+    def write(self, data):
+        self._buffer += data
 
 
-def evaluate(code, max_steps=MAX_STEPS, max_output=MAX_OUTPUT):
-    """Run brainfuck ``code`` and return its output.
+class IncrementalByteCellArray:
+    def __init__(self):
+        self.byte_cells = [0]
+        self.data_pointer = 0
 
-    Raises ``BrainfuckError`` on malformed code, a pointer moving left of the
-    tape, or when the step/output limits are exceeded (e.g. ``+[]``).
-    """
-    code = "".join(c for c in code if c in "><+-.,[]")
-    pairs = _match_brackets(code)
-    tape, ptr, ip, steps, out = [0], 0, 0, 0, []
-    while ip < len(code):
-        steps += 1
-        if steps > max_steps:
-            raise BrainfuckError(f"Step limit exceeded ({max_steps})")
-        ch = code[ip]
-        if ch == ">":
-            ptr += 1
-            if ptr == len(tape):
-                tape.append(0)
-        elif ch == "<":
-            ptr -= 1
-            if ptr < 0:
-                raise BrainfuckError("Pointer moved left of the tape")
-        elif ch == "+":
-            tape[ptr] = (tape[ptr] + 1) % 256
-        elif ch == "-":
-            tape[ptr] = (tape[ptr] - 1) % 256
-        elif ch == ".":
-            out.append(chr(tape[ptr]))
-            if len(out) > max_output:
-                raise BrainfuckError(f"Output limit exceeded ({max_output})")
-        elif ch == ",":
-            tape[ptr] = 0  # no input stream is available
-        elif ch == "[":
-            if tape[ptr] == 0:
-                ip = pairs[ip]
-        elif ch == "]":
-            if tape[ptr] != 0:
-                ip = pairs[ip]
-        ip += 1
-    return "".join(out)
+    def __getitem__(self, item):
+        cell_amount = len(self.byte_cells)
+        if item > cell_amount - 1:
+            self.extend(item - cell_amount + 1)
+
+        return self.byte_cells[item]
+
+    def __setitem__(self, key: int, value: int):
+        cell_amount = len(self.byte_cells)
+        if key > cell_amount - 1:
+            self.extend(key - cell_amount + 1)
+
+        self.byte_cells[key] = value
+
+    def __len__(self):
+        return len(self.byte_cells)
+
+    def __repr__(self):
+        return self.byte_cells.__repr__()
+
+    def extend(self, size: int):
+        self.byte_cells += [0] * size
+
+    def increment(self):
+        new_val = (self.get() + 1) % 256
+        self.set(new_val)
+
+    def decrement(self):
+        new_val = self.get() - 1
+        if new_val < 0:
+            new_val = 255
+
+        self.set(new_val)
+
+    def set(self, value: int):
+        self.__setitem__(self.data_pointer, value)
+
+    def get(self):
+        return self.__getitem__(self.data_pointer)
+
+
+class BrainfuckInterpreter:
+    def __init__(self, commands: str):
+        self._commands = commands
+
+        self.input = IOStream()
+        self.output = IOStream()
+
+        self.instruction_pointer = 0
+        self.cells = IncrementalByteCellArray()
+
+        self._opening_bracket_indexes = []
+
+    def _look_forward(self):
+        remaining_commands = self._commands[self.instruction_pointer :]
+        loop_counter = 0
+        index = self.instruction_pointer
+
+        for command in remaining_commands:
+            if command == "[":
+                loop_counter += 1
+            elif command == "]":
+                loop_counter -= 1
+
+            if loop_counter == 0:
+                return index
+
+            index += 1
+
+    def _interpret(self):
+        instruction = self._commands[self.instruction_pointer]
+
+        if instruction == ">":
+            self.cells.data_pointer += 1
+        elif instruction == "<":
+            self.cells.data_pointer -= 1
+        elif instruction == "+":
+            self.cells.increment()
+        elif instruction == "-":
+            self.cells.decrement()
+        elif instruction == ".":
+            self.output.write(chr(self.cells.get()))
+        elif instruction == ",":
+            self.cells.set(self.input.read(1))
+        elif instruction == "[":
+            if self.cells.get() == 0:
+                loop_end = self._look_forward()
+                self.instruction_pointer = loop_end
+            else:
+                self._opening_bracket_indexes.append(self.instruction_pointer)
+        elif instruction == "]":
+            if self.cells.get() != 0:
+                opening_bracket_index = self._opening_bracket_indexes.pop(-1)
+
+                self.instruction_pointer = opening_bracket_index - 1
+            else:
+                self._opening_bracket_indexes.pop(-1)
+
+    def step(self) -> None:
+        self._interpret()
+        self.instruction_pointer += 1
+
+    def available(self) -> bool:
+        return not self.instruction_pointer >= len(self._commands)
+
+    def command(self):
+        return self._commands[self.instruction_pointer]
 
 
 def bf(text):
@@ -94,25 +170,29 @@ def bf(text):
     return "".join(items)
 
 
-@heartless_cmd(pattern=r"bf(?:\s+([\s\S]*))?$")
+@heartless_cmd(
+    pattern="bf",
+)
 async def _(event):
-    text = await arg_or_reply(event)
-    if not text:
-        return await eod(event, "`Give me some text (or reply to one).`", time=5)
-    if any(ord(c) > 255 for c in text):
-        return await eod(event, "`Only characters with code 0-255 are supported.`")
-    await event.eor(bf(text)[:4096], parse_mode=None)
+    input_ = event.text[4:]
+    if not input_:
+        if event.reply_to_msg_id:
+            previous_message = await event.get_reply_message()
+            input_ = previous_message.message
+        else:
+            return await eod(event, "Give me some text lol", time=5)
+    await event.eor(bf(input_), parse_mode=None)
 
 
-@heartless_cmd(pattern=r"rbf(?:\s+([\s\S]*))?$")
+@heartless_cmd(
+    pattern="rbf",
+)
 async def _(event):
-    code = await arg_or_reply(event)
-    if not code:
-        return await eod(event, "`Give me brainfuck code (or reply to it).`", time=5)
-    try:
-        # CPU-bound pure-Python loop (bounded by MAX_STEPS): keep it off the
-        # event loop so the userbot stays responsive.
-        result = await asyncio.to_thread(evaluate, code)
-    except BrainfuckError as er:
-        return await event.eor(f"**Error:** {er}")
-    await event.eor(result or "`(no output)`", parse_mode=None if result else "md")
+    input_ = event.text[5:]
+    if not input_:
+        if event.reply_to_msg_id:
+            previous_message = await event.get_reply_message()
+            input_ = previous_message.message
+        else:
+            return await eod(event, "Give me some text lol", time=5)
+    await event.eor(f"{evaluate(input_)}")
