@@ -6,52 +6,53 @@
 """
 
 import io
+import os
 import random
 import textwrap
 from glob import glob
 
 from PIL import Image, ImageDraw, ImageFont
+from telethon.errors.rpcerrorlist import BotMethodInvalidError
+from telethon.tl.types import InputMessagesFilterDocument
 
 from . import *
 
-FONTS = glob("resources/fonts/*ttf")  # .ttf only; the .otf fonts are for quotes
 
-
-def _render(text):
-    color = tuple(random.randint(0, 255) for _ in range(3))
-    wrapped = "\n".join(textwrap.wrap(text, width=10)) or text
+@heartless_cmd(pattern="sticklet (.*)")
+async def sticklet(event):
+    a = await event.eor(get_string("com_1"))
+    R = random.randint(0, 256)
+    G = random.randint(0, 256)
+    B = random.randint(0, 256)
+    sticktext = event.pattern_match.group(1)
+    if not sticktext:
+        return await event.eor("`Give me some Text`")
+    sticktext = textwrap.wrap(sticktext, width=10)
+    # converts back the list to a string
+    sticktext = "\n".join(sticktext)
     image = Image.new("RGBA", (512, 512), (255, 255, 255, 0))
     draw = ImageDraw.Draw(image)
-    font_file = random.choice(FONTS)
-    # shrink until the text fits the 512x512 canvas
-    for size in range(230, 20, -10):
-        font = ImageFont.truetype(font_file, size=size)
-        width, height = text_size(font, wrapped, draw, multiline=True)
-        if width <= 512 and height <= 512:
+    fontsize = 230
+    font_file_ = glob("resources/fonts/*ttf")
+    FONT_FILE = random.choice(font_file_)
+    font = ImageFont.truetype(FONT_FILE, size=fontsize)
+    for i in range(10):
+        if not draw.multiline_textsize(sticktext, font=font) > (512, 512):
             break
+        fontsize = 100
+        font = ImageFont.truetype(FONT_FILE, size=fontsize)
+    width, height = draw.multiline_textsize(sticktext, font=font)
     draw.multiline_text(
-        ((512 - width) / 2, (512 - height) / 2), wrapped, font=font, fill=color
+        ((512 - width) / 2, (512 - height) / 2), sticktext, font=font, fill=(R, G, B)
     )
-    stream = io.BytesIO()
-    stream.name = "sticklet.webp"
-    image.save(stream, "WebP")
-    stream.seek(0)
-    return stream, wrapped
-
-
-@heartless_cmd(pattern=r"sticklet(?:\s+([\s\S]*))?$")
-async def sticklet(event):
-    sticktext = await arg_or_reply(event)
-    if not sticktext:
-        return await eod(event, "`Give me some Text`")
-    if not FONTS:
-        return await eod(event, "`No .ttf fonts found in resources/fonts.`")
-    a = await event.eor(proc_text())
-    stream, wrapped = _render(sticktext[:200])
+    image_stream = io.BytesIO()
+    image_stream.name = check_filename("heartless.webp")
+    image.save(image_stream, "WebP")
+    image_stream.seek(0)
     await a.delete()
     await event.client.send_message(
         event.chat_id,
-        wrapped,
-        file=stream,
+        "{}".format(sticktext),
+        file=image_stream,
         reply_to=event.message.reply_to_msg_id,
     )
