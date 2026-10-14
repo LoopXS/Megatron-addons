@@ -7,7 +7,8 @@ markdownify
 phlogo
 pygments
 quotefancy
-shazamio
+# shazamio removed: no Python 3.14 wheels for shazamio-core==1.1.2 (needs ALSA/Rust).
+# Megatron plugins/shazam.py already uses ACRCloud and does not need shazamio.
 speechrecognition
 speedtest-cli
 wikipedia
