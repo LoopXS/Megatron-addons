@@ -12,6 +12,12 @@ import textwrap
 from glob import glob
 
 from PIL import Image, ImageDraw, ImageFont
+
+def _multiline_wh(draw, text, font):
+    """Pillow 10+ compatible multiline text size."""
+    bbox = draw.multiline_textbbox((0, 0), text, font=font)
+    return bbox[2] - bbox[0], bbox[3] - bbox[1]
+
 from telethon.errors.rpcerrorlist import BotMethodInvalidError
 from telethon.tl.types import InputMessagesFilterDocument
 
@@ -37,11 +43,11 @@ async def sticklet(event):
     FONT_FILE = random.choice(font_file_)
     font = ImageFont.truetype(FONT_FILE, size=fontsize)
     for i in range(10):
-        if not draw.multiline_textsize(sticktext, font=font) > (512, 512):
+        if not _multiline_wh(draw, sticktext, font=font) > (512, 512):
             break
         fontsize = 100
         font = ImageFont.truetype(FONT_FILE, size=fontsize)
-    width, height = draw.multiline_textsize(sticktext, font=font)
+    width, height = _multiline_wh(draw, sticktext, font=font)
     draw.multiline_text(
         ((512 - width) / 2, (512 - height) / 2), sticktext, font=font, fill=(R, G, B)
     )
